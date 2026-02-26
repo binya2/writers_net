@@ -89,16 +89,21 @@ services:
       - reshet_net
 
   ocr-service:
+    # ... (existing ocr service)
+    networks:
+      - reshet_net
+
+  clean-service:
     build:
       context: .
-      dockerfile: OCREngine/Dockerfile
-    container_name: ocr-service
+      dockerfile: CleanService/Dockerfile
+    container_name: clean-service
     environment:
       - MONGO_URI=mongodb://mongo:27017/
       - KAFKA_BROKER=kafka:29092
-      - CONSUME_TOPIC=FILE_UPLOADED
-      - PRODUCE_TOPIC=RAW_TEXT_EXTRACTED
-      - GROUP_ID=ocr_group
+      - CONSUME_TOPIC=RAW_TEXT_EXTRACTED
+      - PRODUCE_TOPIC=TEXT_CLEANED
+      - GROUP_ID=clean_group
     depends_on:
       mongo:
         condition: service_healthy
