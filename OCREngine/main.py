@@ -1,12 +1,14 @@
 import json
 from shared.kafka_connection import kafka_service
-from utils import process_message
+from OCREngine.utils import process_message
 from shared.logger_config import get_logger
+from shared.config import settings
 
 logger = get_logger("ocr-service")
 
 def start_consumer():
-    logger.info(f"OCR Engine started. Listening to topic: {kafka_service.consume_topic}")
+    kafka_service.consumer.subscribe([settings.CONSUME_TOPIC])
+    logger.info(f"OCR Engine started. Listening to topic: {settings.CONSUME_TOPIC}")
     try:
         while True:
             msg = kafka_service.consumer.poll(1.0)

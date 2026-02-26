@@ -69,7 +69,7 @@ services:
   api-service:
     build:
       context: .
-      dockerfile: api_app/Dockerfile
+      dockerfile: API_app/Dockerfile
     container_name: api-service
     ports:
       - "8000:8000"
@@ -79,7 +79,7 @@ services:
       - KAFKA_TOPIC=FILE_UPLOADED
       - INPUT_FOLDER=/app/input_images
     volumes:
-      - ./api_app/input_images:/app/input_images
+      - ./API_app/input_images:/app/input_images
     depends_on:
       mongo:
         condition: service_healthy
@@ -89,7 +89,21 @@ services:
       - reshet_net
 
   ocr-service:
-    # ... (existing ocr service)
+    build:
+      context: .
+      dockerfile: OCREngine/Dockerfile
+    container_name: ocr-service
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+      - KAFKA_BROKER=kafka:29092
+      - CONSUME_TOPIC=FILE_UPLOADED
+      - PRODUCE_TOPIC=RAW_TEXT_EXTRACTED
+      - GROUP_ID=ocr_group
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - reshet_net
 

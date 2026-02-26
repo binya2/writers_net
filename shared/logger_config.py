@@ -1,5 +1,5 @@
 import logging
-from config import settings
+from shared.config import settings
 
 def get_logger(service_name):
     logging.basicConfig(

@@ -2,13 +2,13 @@ import json
 from shared.config import settings
 from shared.kafka_connection import kafka_service
 from shared.logger_config import get_logger
-from utils import process_message
+from CleanService.utils import process_message
 
 logger = get_logger("clean-service")
 
 
 def start_consumer():
-    kafka_service.consumer.subscribe(settings.CONSUME_TOPIC)
+    kafka_service.consumer.subscribe([settings.CONSUME_TOPIC])
     logger.info(f"Clean Service started. Listening to topic: {settings.CONSUME_TOPIC}")
 
     try:

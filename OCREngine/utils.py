@@ -35,6 +35,7 @@ def update_db_after_ocr(image_id: str, raw_text: str):
 
 def notify_ocr_complete(image_id: str):
     next_event = {"image_id": image_id, "status": "ocr_completed"}
+    kafka_service.producer.poll(0)
     kafka_service.producer.produce(
         settings.PRODUCE_TOPIC,
         key=image_id.encode('utf-8'),

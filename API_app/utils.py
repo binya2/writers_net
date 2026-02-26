@@ -53,6 +53,7 @@ def create_initial_state(image_id: str, filename: str, metadata: dict):
 
 def notify_kafka_ingested(image_id: str):
     kafka_message = {"image_id": image_id, "status": "ingested"}
+    kafka_service.producer.poll(0)
     kafka_service.producer.produce(
         settings.KAFKA_TOPIC,
         key=image_id.encode('utf-8'),

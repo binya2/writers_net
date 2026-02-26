@@ -41,6 +41,7 @@ def notify_clean_complete(image_id: str):
         "image_id": image_id,
         "status": "clean_completed"
     }
+    kafka_service.producer.poll(0)
     kafka_service.producer.produce(
         settings.PRODUCE_TOPIC,
         key=image_id.encode('utf-8'),

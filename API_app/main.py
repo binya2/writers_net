@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks
-from utils import process_and_dispatch, scan_local_folder_task
+from API_app.utils import process_and_dispatch, scan_local_folder_task
 from shared.logger_config import get_logger
 from shared.config import settings
 
@@ -27,4 +27,4 @@ async def scan_folder(background_tasks: BackgroundTasks):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("api_app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("API_app.main:app", host="0.0.0.0", port=8000, reload=True)

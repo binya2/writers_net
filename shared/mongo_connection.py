@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 import gridfs
-from config import settings
+from shared.config import settings
 
 class MongoDBConnection:
     _instance = None
