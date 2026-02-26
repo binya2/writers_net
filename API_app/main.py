@@ -1,6 +1,5 @@
-import os
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks
-from .utils import process_and_dispatch, scan_local_folder_task
+from utils import process_and_dispatch, scan_local_folder_task
 from shared.logger_config import get_logger
 from shared.config import settings
 
@@ -8,7 +7,7 @@ logger = get_logger("ingestion-service")
 
 app = FastAPI(
     title="Ingestion Service",
-    description="Gateway for Reshet Hakatavim Pipeline"
+    description="Gateway for Reshet The Writers Pipeline"
 )
 
 

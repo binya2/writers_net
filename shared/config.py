@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    #general
     LOG_LEVEL: str = "INFO"
     
     # MongoDB
