@@ -6,7 +6,7 @@ COPY CleanService/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY CleanService/ ./CleanService/
-COPY shared/ ./shared/
+COPY Shared/ ./Shared/
 
 ENV PYTHONPATH=/app
 

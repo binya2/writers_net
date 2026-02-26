@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, BackgroundTasks
 from API_app.utils import process_and_dispatch, scan_local_folder_task
-from shared.logger_config import get_logger
-from shared.config import settings
+from Shared.logger_config import get_logger
+from Shared.config import settings
 
 logger = get_logger("ingestion-service")
 

@@ -2,10 +2,10 @@ import json
 from io import BytesIO
 import pytesseract
 from PIL import Image
-from shared.mongo_connection import mongo_db
-from shared.kafka_connection import kafka_service
-from shared.logger_config import get_logger
-from shared.config import settings
+from Shared.mongo_connection import mongo_db
+from Shared.kafka_connection import kafka_service
+from Shared.logger_config import get_logger
+from Shared.config import settings
 
 logger = get_logger("ocr-service")
 

@@ -12,7 +12,7 @@ COPY OCREngine/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY OCREngine/ ./OCREngine/
-COPY shared/ ./shared/
+COPY Shared/ ./Shared/
 
 ENV PYTHONPATH=/app
 

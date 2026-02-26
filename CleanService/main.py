@@ -1,7 +1,7 @@
 import json
-from shared.config import settings
-from shared.kafka_connection import kafka_service
-from shared.logger_config import get_logger
+from Shared.config import settings
+from Shared.kafka_connection import kafka_service
+from Shared.logger_config import get_logger
 from CleanService.utils import process_message
 
 logger = get_logger("clean-service")

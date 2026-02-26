@@ -1,5 +1,5 @@
 from confluent_kafka import Producer, Consumer
-from shared.config import settings
+from Shared.config import settings
 
 class KafkaConnection:
     _instance = None

@@ -17,5 +17,9 @@ class Settings(BaseSettings):
     # Ingestion App
     INPUT_FOLDER: str = "./input_images"
 
+    # Elasticsearch
+    ES_HOST: str = "http://localhost:9200"
+    ES_INDEX: str = "writers_index"
+
 
 settings = Settings()

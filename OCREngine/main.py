@@ -1,8 +1,8 @@
 import json
-from shared.kafka_connection import kafka_service
+from Shared.kafka_connection import kafka_service
 from OCREngine.utils import process_message
-from shared.logger_config import get_logger
-from shared.config import settings
+from Shared.logger_config import get_logger
+from Shared.config import settings
 
 logger = get_logger("ocr-service")
 

@@ -3,10 +3,10 @@ import os
 import re
 from collections import Counter
 
-from shared.mongo_connection import mongo_db
-from shared.kafka_connection import kafka_service
-from shared.logger_config import get_logger
-from shared.config import settings
+from Shared.mongo_connection import mongo_db
+from Shared.kafka_connection import kafka_service
+from Shared.logger_config import get_logger
+from Shared.config import settings
 
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 

@@ -6,7 +6,7 @@ COPY API_app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY API_app/ ./API_app/
-COPY shared/ ./shared/
+COPY Shared/ ./Shared/
 
 ENV PYTHONPATH=/app
 
