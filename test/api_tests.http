@@ -1,0 +1,15 @@
+### Test Image Upload
+POST http://localhost:8000/upload/
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test_image.jpg"
+Content-Type: image/jpeg
+
+< ./test_image.jpg
+--boundary--
+
+### Test Folder Scan
+POST http://localhost:8000/scan-folder/
+Accept: application/json
+
