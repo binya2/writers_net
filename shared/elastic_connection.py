@@ -18,11 +18,14 @@ class ElasticConnection:
                 cls._instance.client = None
         return cls._instance
 
-    def ensure_index(self, index_name: str):
+    def ensure_index(self, index_name: str, mapping: dict = None):
         try:
             if not self.client.indices.exists(index=index_name):
-                self.client.indices.create(index=index_name)
-                logger.info(f"Created Elasticsearch index: {index_name}")
+                if mapping:
+                    self.client.indices.create(index=index_name, body=mapping)
+                else:
+                    self.client.indices.create(index=index_name)
+                logger.info(f"Created Elasticsearch index: {index_name} with mapping.")
         except Exception as e:
             logger.error(f"Failed to check/create index {index_name}: {e}")
 

@@ -2,11 +2,14 @@ import json
 from Shared.config import settings
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
-from IndexerService.utils import process_message
+from IndexerService.utils import process_message, init_indexer
 
 logger = get_logger("indexer-service")
 
+
 def start_consumer():
+    init_indexer()
+
     kafka_service.consumer.subscribe([settings.CONSUME_TOPIC])
     logger.info(f"Indexer Service started. Listening to topic: {settings.CONSUME_TOPIC}")
 
@@ -29,6 +32,7 @@ def start_consumer():
         logger.info("Shutting down Indexer service...")
     finally:
         kafka_service.consumer.close()
+
 
 if __name__ == "__main__":
     start_consumer()
