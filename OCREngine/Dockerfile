@@ -4,7 +4,6 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
-    tesseract-ocr-heb \
     tesseract-ocr-eng \
     libgl1 \
     && rm -rf /var/lib/apt/lists/*

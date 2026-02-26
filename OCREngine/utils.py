@@ -12,7 +12,7 @@ logger = get_logger("ocr-service")
 def extract_text_from_memory(image_bytes: bytes) -> str:
     try:
         img = Image.open(BytesIO(image_bytes))
-        text = pytesseract.image_to_string(img, lang='heb+eng')
+        text = pytesseract.image_to_string(img, lang='eng')
         return text.strip()
     except Exception as e:
         logger.error(f"OCR failed: {e}")
