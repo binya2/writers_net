@@ -2,11 +2,15 @@ import json
 from shared.config import settings
 from shared.kafka_connection import kafka_service
 from shared.logger_config import get_logger
-from AnalyticsService.utils import process_message
+from AnalyticsService.utils import process_message, init_analytics
 
 logger = get_logger("analytics-service")
 
+
 def start_consumer():
+    logger.info("Initializing Analytics Engine...")
+    init_analytics()
+
     kafka_service.consumer.subscribe([settings.CONSUME_TOPIC])
     logger.info(f"Analytics Service started. Listening to topic: {settings.CONSUME_TOPIC}")
 
@@ -29,6 +33,7 @@ def start_consumer():
         logger.info("Shutting down Analytics service...")
     finally:
         kafka_service.consumer.close()
+
 
 if __name__ == "__main__":
     start_consumer()
