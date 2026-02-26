@@ -28,4 +28,5 @@ class KafkaProducer:
         )
         self.producer.flush()
 
+
 kafka_service = KafkaProducer()
