@@ -1,9 +1,7 @@
 import os
 from pymongo import MongoClient
 import gridfs
-import logging
-
-logger = logging.getLogger("ingestion-service")
+from logger_config import logger
 
 
 class MongoDB:

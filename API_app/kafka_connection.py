@@ -1,9 +1,9 @@
 import os
 import json
-import logging
 from confluent_kafka import Producer
 
-logger = logging.getLogger("ingestion-service")
+from logger_config import logger
+
 
 class KafkaProducer:
     _instance = None

@@ -1,12 +1,12 @@
 import os
 import uuid
-import logging
 from io import BytesIO
 from PIL import Image
-from database import mongo_db
-from kafka_producer import kafka_service
 
-logger = logging.getLogger("ingestion-service")
+from logger_config import logger
+from mongoDB_connection import mongo_db
+from kafka_connection import kafka_service
+
 INPUT_FOLDER = os.getenv("INPUT_FOLDER", "./input_images")
 
 
