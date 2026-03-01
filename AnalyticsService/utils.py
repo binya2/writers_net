@@ -36,8 +36,8 @@ def analyze_sentiment(text: str) -> str:
     if not text: return "Neutral"
     try:
         score = analyzer.polarity_scores(text)['compound']
-        if score >= 0.05: return "Positive"
-        if score <= -0.05: return "Negative"
+        if score >= 0.50: return "Positive"
+        if score <= -0.50: return "Negative"
     except: pass
     return "Neutral"
 

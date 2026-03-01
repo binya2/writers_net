@@ -16,6 +16,13 @@ spec:
         - name: ocr-service
           image: beni2/writers_net-ocr-service:latest
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           envFrom:
             - configMapRef:
                 name: app-config
@@ -45,6 +52,13 @@ spec:
         - name: clean-service
           image: beni2/writers_net-clean-service:latest
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           envFrom:
             - configMapRef:
                 name: app-config
@@ -74,6 +88,13 @@ spec:
         - name: analytics-service
           image: beni2/writers_net-analytics-service:v2
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           envFrom:
             - configMapRef:
                 name: app-config
@@ -103,6 +124,13 @@ spec:
         - name: indexer-service
           image: beni2/writers_net-indexer-service:latest
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           envFrom:
             - configMapRef:
                 name: app-config

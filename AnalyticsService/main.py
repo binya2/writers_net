@@ -24,9 +24,13 @@ def start_consumer():
                 continue
 
             try:
-                msg_value = json.loads(msg.value().decode('utf-8'))
-                process_message(msg_value)
-                kafka_service.consumer.commit(msg)
+                try:
+                    msg_value = json.loads(msg.value().decode('utf-8'))
+                    process_message(msg_value)
+                except Exception as e:
+                    logger.error(f"Error processing message in Analytics service: {e}")
+                finally:
+                    kafka_service.consumer.commit(msg)
             except Exception as e:
                 logger.error(f"Critical error in Analytics consumer loop: {e}")
 
