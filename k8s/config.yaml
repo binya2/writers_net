@@ -4,9 +4,9 @@ metadata:
   name: app-config
 data:
   MONGO_URI: "mongodb://mongo:27017/"
-  KAFKA_BROKER: "kafka:9092"
+  KAFKA_BROKER: "kafka:29092"
   ES_HOST: "http://elasticsearch:9200"
-  INPUT_FOLDER: "/app/input_images"
+  INPUT_FOLDER: "/app/API_app/input_images"
   API_HOST: "0.0.0.0"
   API_PORT: "8000"
   DASHBOARD_HOST: "0.0.0.0"

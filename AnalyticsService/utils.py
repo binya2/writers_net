@@ -2,129 +2,63 @@ import json
 import os
 import re
 from collections import Counter
-
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
 from Shared.config import settings
-
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 logger = get_logger("analytics-service")
 
 analyzer = SentimentIntensityAnalyzer()
 
-STOP_WORDS = {
-    "the", "and", "is", "in", "to", "a", "of", "it", "on", "for",
-    "with", "as", "by", "an", "this", "that", "are", "was", "were", "or",
-    "at", "from", "be", "has", "have", "had", "but", "not", "what", "all",
-    "we", "when", "your", "can", "said", "there", "use", "if", "will", "my",
-    "one", "no", "he", "she", "they", "who", "which", "will", "up", "about"
-}
-
+STOP_WORDS = {"the", "and", "is", "in", "to", "a", "of", "it", "on", "for", "with", "as", "by", "an", "this", "that", "are", "was", "were", "or", "at", "from", "be", "has", "have", "had", "but", "not", "what", "all", "we", "when", "your", "can", "said", "there", "use", "if", "will", "my", "one", "no", "he", "she", "they", "who", "which", "up", "about"}
 WEAPON_PATTERNS = {}
-
 
 def init_analytics(file_path: str = None):
     global WEAPON_PATTERNS
-
-    if file_path is None:
-        file_path = settings.WEAPONS_FILE
-
+    file_path = file_path or settings.WEAPONS_FILE
     try:
-        if not os.path.exists(file_path):
-            logger.error(f"Weapons file not found at: {file_path}")
-            return
-            
-        with open(file_path, "r", encoding="utf-8") as f:
-            weapons_list = [line.strip().lower() for line in f if line.strip()]
-
-        WEAPON_PATTERNS = {
-            weapon: re.compile(r'\b' + re.escape(weapon) + r'\b')
-            for weapon in weapons_list
-        }
-        logger.info(f"Successfully initialized {len(WEAPON_PATTERNS)} weapon patterns from {file_path}.")
-
-    except FileNotFoundError:
-        logger.error(f"Failed to initialize analytics: {file_path} not found!")
-
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                weapons_list = [line.strip().lower() for line in f if line.strip()]
+            WEAPON_PATTERNS = {w: re.compile(r'\b' + re.escape(w) + r'\b') for w in weapons_list}
+            logger.info(f"Initialized {len(WEAPON_PATTERNS)} weapon patterns.")
+    except Exception as e:
+        logger.error(f"Failed to load weapons: {e}")
 
 def get_top_10_words(text: str) -> list:
-    if not text:
-        return []
+    if not text: return []
     words = text.lower().split()
-    filtered_words = [word for word in words if word not in STOP_WORDS and len(word) > 1]
-    word_counts = Counter(filtered_words)
-    return [{"word": item[0], "count": item[1]} for item in word_counts.most_common(10)]
-
-
-def find_weapons(text: str) -> list:
-    if not text:
-        return []
-    text_lower = text.lower()
-    found_weapons = []
-    for weapon, pattern in WEAPON_PATTERNS.items():
-        if pattern.search(text_lower):
-            found_weapons.append(weapon)
-    return found_weapons
-
+    filtered = [w for w in words if w not in STOP_WORDS and len(w) > 1]
+    return [{"word": item[0], "count": item[1]} for item in Counter(filtered).most_common(10)]
 
 def analyze_sentiment(text: str) -> str:
-    if not text:
-        return "Neutral"
-
-    scores = analyzer.polarity_scores(text)
-    compound = scores['compound']
-
-    if compound >= 0.05:
-        return "Positive"
-    elif compound <= -0.05:
-        return "Negative"
-    else:
-        return "Neutral"
-
-
-def notify_analytics_complete(image_id: str, filename: str, metadata: dict, clean_text: str, analytics: dict):
-    next_event = {
-        "image_id": image_id,
-        "filename": filename,
-        "metadata": metadata,
-        "clean_text": clean_text,
-        "analytics": analytics,
-        "status": "analytics_completed"
-    }
-    kafka_service.producer.poll(0)
-    kafka_service.producer.produce(
-        settings.PRODUCE_TOPIC,
-        key=image_id.encode('utf-8'),
-        value=json.dumps(next_event).encode('utf-8')
-    )
-    kafka_service.producer.flush()
-
+    if not text: return "Neutral"
+    try:
+        score = analyzer.polarity_scores(text)['compound']
+        if score >= 0.05: return "Positive"
+        if score <= -0.05: return "Negative"
+    except: pass
+    return "Neutral"
 
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
-    filename = msg_value.get("filename", "unknown")
-    metadata = msg_value.get("metadata", {})
-    clean_text = msg_value.get("clean_text", "")
-
-    if not image_id:
-        logger.warning("Received message with missing 'image_id' in Analytics. Skipping.")
-        return
-
-    logger.info(f"Starting Analytics process for: {image_id}")
-
+    if not image_id: return
+    logger.info(f"Processing Analytics: {image_id}")
     try:
-        top_words = get_top_10_words(clean_text)
-        weapons = find_weapons(clean_text)
-        sentiment = analyze_sentiment(clean_text)
-
+        clean_text = msg_value.get("clean_text", "")
         analytics = {
-            "top_10_words": top_words,
-            "weapons_found": weapons,
-            "sentiment": sentiment
+            "top_10_words": get_top_10_words(clean_text),
+            "weapons_found": [w for w, p in WEAPON_PATTERNS.items() if p.search(clean_text.lower())],
+            "sentiment": analyze_sentiment(clean_text)
         }
-
-        notify_analytics_complete(image_id, filename, metadata, clean_text, analytics)
+        
+        next_event = {
+            "image_id": image_id, "filename": msg_value.get("filename", "unknown"),
+            "metadata": msg_value.get("metadata", {}), "clean_text": clean_text,
+            "analytics": analytics, "status": "analytics_completed"
+        }
+        kafka_service.producer.produce(settings.PRODUCE_TOPIC, key=image_id.encode('utf-8'), value=json.dumps(next_event).encode('utf-8'))
+        kafka_service.producer.flush()
     except Exception as e:
-        logger.error(f"Error analyzing document {image_id}: {e}")
-        notify_analytics_complete(image_id, filename, metadata, clean_text, {})
+        logger.error(f"Error: {e}")

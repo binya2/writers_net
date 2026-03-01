@@ -15,6 +15,7 @@ spec:
       containers:
         - name: ocr-service
           image: beni2/writers_net-ocr-service:latest
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: app-config
@@ -43,6 +44,7 @@ spec:
       containers:
         - name: clean-service
           image: beni2/writers_net-clean-service:latest
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: app-config
@@ -70,7 +72,8 @@ spec:
     spec:
       containers:
         - name: analytics-service
-          image: beni2/writers_net-analytics-service:latest
+          image: beni2/writers_net-analytics-service:v2
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: app-config
@@ -99,6 +102,7 @@ spec:
       containers:
         - name: indexer-service
           image: beni2/writers_net-indexer-service:latest
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: app-config
