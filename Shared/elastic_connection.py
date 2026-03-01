@@ -2,7 +2,7 @@ from elasticsearch import Elasticsearch
 from Shared.config import settings
 from Shared.logger_config import get_logger
 
-logger = get_logger("shared-elastic")
+logger = get_logger("Shared-elastic")
 
 class ElasticConnection:
     _instance = None
