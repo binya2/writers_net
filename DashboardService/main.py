@@ -73,9 +73,7 @@ def render_dashboard():
     free_text, sentiment, weapon_filter = get_search_filters()
 
     if st.button("Search"):
-        # The cast to AbstractContextManager fixes the IDE warning:
-        # "Expected type 'contextlib.AbstractContextManager', got 'Iterator[None]' instead"
-        with cast(AbstractContextManager, st.spinner("Fetching data from Elasticsearch...")):
+        with cast(Any, st.spinner("Fetching data from Elasticsearch...")):
             results = search_documents(free_text, sentiment, weapon_filter)
             display_search_results(results)
 
