@@ -10,8 +10,8 @@ Content-Type: image/jpeg
 --boundary--
 
 ### Test Folder Scan (Batch Ingestion)
-#POST http://localhost:8000/scan-folder/
-POST https://api-service-route-beny20-dev.apps.rm2.thpm.p1.openshiftapps.com/scan-folder/
+POST http://localhost:8000/scan-folder/
+#POST https://api-service-route-beny20-dev.apps.rm2.thpm.p1.openshiftapps.com/scan-folder/
 Accept: application/json
 
 ### ----------------------------------------------------
