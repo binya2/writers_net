@@ -1,8 +1,8 @@
-import json
 from Shared.config import settings
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
 from AnalyticsService.utils import process_message, init_analytics
+import json
 
 logger = get_logger("analytics-service")
 

@@ -1,6 +1,7 @@
 import re
 import json
 import os
+import string
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
 from Shared.config import settings
@@ -24,7 +25,10 @@ def clean_ocr_text(raw_text: str) -> str:
         if not raw_text:
             return ""
         text = raw_text.replace('\n', ' ').replace('\r', ' ')
-        text = re.sub(r'[^a-zA-Z0-9\s.,!?"\'():\-/;%&+=]', ' ', text)
+        
+        translator = str.maketrans('', '', string.punctuation)
+        text = text.translate(translator)
+        
         text = re.sub(r'\s+', ' ', text).strip()
         return text
     except Exception as e:
