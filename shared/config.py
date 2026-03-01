@@ -31,5 +31,5 @@ class Settings(BaseSettings):
 
     WEAPONS_FILE: str = "Shared/weapons.txt"
 
-    settings = Settings()
+settings = Settings()
 
