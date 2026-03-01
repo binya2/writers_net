@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ocr-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ocr-service
+  template:
+    metadata:
+      labels:
+        app: ocr-service
+    spec:
+      containers:
+        - name: ocr-service
+          image: beni2/writers_net-ocr-service:latest
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: CONSUME_TOPIC
+              value: "FILE_UPLOADED"
+            - name: PRODUCE_TOPIC
+              value: "RAW_TEXT_EXTRACTED"
+            - name: GROUP_ID
+              value: "ocr_group"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clean-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clean-service
+  template:
+    metadata:
+      labels:
+        app: clean-service
+    spec:
+      containers:
+        - name: clean-service
+          image: beni2/writers_net-clean-service:latest
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: CONSUME_TOPIC
+              value: "RAW_TEXT_EXTRACTED"
+            - name: PRODUCE_TOPIC
+              value: "TEXT_CLEANED"
+            - name: GROUP_ID
+              value: "clean_group"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: beni2/writers_net-analytics-service:latest
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: CONSUME_TOPIC
+              value: "TEXT_CLEANED"
+            - name: PRODUCE_TOPIC
+              value: "ANALYTICS_COMPLETED"
+            - name: GROUP_ID
+              value: "analytics_group"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexer-service
+  template:
+    metadata:
+      labels:
+        app: indexer-service
+    spec:
+      containers:
+        - name: indexer-service
+          image: beni2/writers_net-indexer-service:latest
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: CONSUME_TOPIC
+              value: "ANALYTICS_COMPLETED"
+            - name: GROUP_ID
+              value: "indexer_group"

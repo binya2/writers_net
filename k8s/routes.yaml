@@ -1,0 +1,31 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: api-service-route
+  labels:
+    app: api-service
+spec:
+  to:
+    kind: Service
+    name: api-service
+  port:
+    targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: dashboard-service-route
+  labels:
+    app: dashboard-service
+spec:
+  to:
+    kind: Service
+    name: dashboard-service
+  port:
+    targetPort: 8501
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

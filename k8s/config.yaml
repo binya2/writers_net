@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  MONGO_URI: "mongodb://mongo:27017/"
+  KAFKA_BROKER: "kafka:9092"
+  ES_HOST: "http://elasticsearch:9200"
+  INPUT_FOLDER: "/app/input_images"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  DASHBOARD_HOST: "0.0.0.0"
+  DASHBOARD_PORT: "8501"
