@@ -28,10 +28,13 @@ def init_analytics(file_path: str = None):
     global WEAPON_PATTERNS
 
     if file_path is None:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_dir, "weapons.txt")
+        file_path = settings.WEAPONS_FILE
 
     try:
+        if not os.path.exists(file_path):
+            logger.error(f"Weapons file not found at: {file_path}")
+            return
+            
         with open(file_path, "r", encoding="utf-8") as f:
             weapons_list = [line.strip().lower() for line in f if line.strip()]
 
@@ -39,7 +42,7 @@ def init_analytics(file_path: str = None):
             weapon: re.compile(r'\b' + re.escape(weapon) + r'\b')
             for weapon in weapons_list
         }
-        logger.info(f"Successfully initialized {len(WEAPON_PATTERNS)} weapon patterns.")
+        logger.info(f"Successfully initialized {len(WEAPON_PATTERNS)} weapon patterns from {file_path}.")
 
     except FileNotFoundError:
         logger.error(f"Failed to initialize analytics: {file_path} not found!")
@@ -68,7 +71,7 @@ def find_weapons(text: str) -> list:
 def analyze_sentiment(text: str) -> str:
     if not text:
         return "Neutral"
-    
+
     scores = analyzer.polarity_scores(text)
     compound = scores['compound']
 
@@ -124,5 +127,4 @@ def process_message(msg_value: dict):
         notify_analytics_complete(image_id, filename, metadata, clean_text, analytics)
     except Exception as e:
         logger.error(f"Error analyzing document {image_id}: {e}")
-        # Pass empty analytics if it fails
         notify_analytics_complete(image_id, filename, metadata, clean_text, {})

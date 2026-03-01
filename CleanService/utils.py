@@ -1,10 +1,23 @@
 import re
 import json
+import os
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
 from Shared.config import settings
 
 logger = get_logger("clean-service")
+
+def load_weapons():
+    try:
+        file_path = settings.WEAPONS_FILE
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                return [line.strip().lower() for line in f if line.strip()]
+    except Exception as e:
+        logger.error(f"Failed to load weapons for cleaning: {e}")
+    return []
+
+WEAPONS_LIST = load_weapons()
 
 def clean_ocr_text(raw_text: str) -> str:
     try:

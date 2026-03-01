@@ -27,4 +27,5 @@ async def scan_folder(background_tasks: BackgroundTasks):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("API_app.main:app", host="0.0.0.0", port=8000, reload=True)
+    logger.info(f"Starting API Service on {settings.API_HOST}:{settings.API_PORT}")
+    uvicorn.run("API_app.main:app", host=settings.API_HOST, port=settings.API_PORT, reload=True)

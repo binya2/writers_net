@@ -78,6 +78,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - KAFKA_TOPIC=FILE_UPLOADED
       - INPUT_FOLDER=/app/input_images
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
     volumes:
       - ./API_app/input_images:/app/input_images
     depends_on:
@@ -160,6 +162,26 @@ services:
       mongo:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - reshet_net
+
+  dashboard-service:
+    build:
+      context: .
+      dockerfile: DashboardService/Dockerfile
+    container_name: dashboard-service
+    ports:
+      - "8501:8501"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+      - ES_HOST=http://elasticsearch:9200
+      - DASHBOARD_HOST=0.0.0.0
+      - DASHBOARD_PORT=8501
+    depends_on:
+      mongo:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
