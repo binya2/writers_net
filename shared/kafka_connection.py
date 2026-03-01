@@ -24,7 +24,8 @@ class KafkaConnection:
                 'bootstrap.servers': settings.KAFKA_BROKER,
                 'group.id': settings.GROUP_ID,
                 'auto.offset.reset': 'earliest',
-                'enable.partition.eof': False
+                'enable.partition.eof': False,
+                'enable.auto.commit': False
             })
         return self._consumer
 

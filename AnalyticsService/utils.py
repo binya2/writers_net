@@ -119,17 +119,24 @@ def notify_analytics_complete(image_id: str):
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
     if not image_id:
+        logger.warning("Received message with missing 'image_id' in Analytics. Skipping.")
         return
 
     logger.info(f"Starting Analytics process for: {image_id}")
 
-    clean_text = fetch_clean_text(image_id)
-    if clean_text is None:
-        return
+    try:
+        clean_text = fetch_clean_text(image_id)
+        if clean_text is None:
+            logger.error(f"Text for image {image_id} not found in MongoDB for analytics.")
+            mongo_db.update_failed_status(image_id, "Clean text not found in MongoDB for analytics")
+            return
 
-    top_words = get_top_10_words(clean_text)
-    weapons = find_weapons(clean_text)
-    sentiment = analyze_sentiment(clean_text)
+        top_words = get_top_10_words(clean_text)
+        weapons = find_weapons(clean_text)
+        sentiment = analyze_sentiment(clean_text)
 
-    update_db_analytics(image_id, top_words, weapons, sentiment)
-    notify_analytics_complete(image_id)
+        update_db_analytics(image_id, top_words, weapons, sentiment)
+        notify_analytics_complete(image_id)
+    except Exception as e:
+        logger.error(f"Error analyzing document {image_id}: {e}")
+        mongo_db.update_failed_status(image_id, str(e))

@@ -23,8 +23,9 @@ def start_consumer():
             try:
                 msg_value = json.loads(msg.value().decode('utf-8'))
                 process_message(msg_value)
+                kafka_service.consumer.commit(msg)
             except Exception as e:
-                logger.error(f"Failed to process message: {e}")
+                logger.error(f"Critical error in Clean consumer loop: {e}")
 
     except KeyboardInterrupt:
         logger.info("Shutting down Clean service...")

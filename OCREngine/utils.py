@@ -45,10 +45,19 @@ def notify_ocr_complete(image_id: str):
 
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
-    if not image_id: return
+    if not image_id:
+        logger.warning("Received message with missing 'image_id'. Skipping.")
+        return
 
-    image_bytes = fetch_image_from_gridfs(image_id)
-    if image_bytes:
-        raw_text = extract_text_from_memory(image_bytes)
-        update_db_after_ocr(image_id, raw_text)
-        notify_ocr_complete(image_id)
+    try:
+        image_bytes = fetch_image_from_gridfs(image_id)
+        if image_bytes:
+            raw_text = extract_text_from_memory(image_bytes)
+            update_db_after_ocr(image_id, raw_text)
+            notify_ocr_complete(image_id)
+        else:
+            logger.error(f"Image {image_id} not found in GridFS.")
+            mongo_db.update_failed_status(image_id, "Image not found in GridFS")
+    except Exception as e:
+        logger.error(f"Error processing message for image {image_id}: {e}")
+        mongo_db.update_failed_status(image_id, str(e))

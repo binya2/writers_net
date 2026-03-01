@@ -53,14 +53,21 @@ def notify_clean_complete(image_id: str):
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
     if not image_id:
+        logger.warning("Received message with missing 'image_id' in CleanService. Skipping.")
         return
 
     logger.info(f"Starting Clean process for: {image_id}")
 
-    raw_text = fetch_raw_text(image_id)
-    if raw_text is None:
-        return
+    try:
+        raw_text = fetch_raw_text(image_id)
+        if raw_text is None:
+            logger.error(f"Raw text for image {image_id} not found in MongoDB for cleaning.")
+            mongo_db.update_failed_status(image_id, "Raw text not found in MongoDB for cleaning")
+            return
 
-    cleaned = clean_ocr_text(raw_text)
-    update_db_cleaned(image_id, cleaned)
-    notify_clean_complete(image_id)
+        cleaned = clean_ocr_text(raw_text)
+        update_db_cleaned(image_id, cleaned)
+        notify_clean_complete(image_id)
+    except Exception as e:
+        logger.error(f"Error cleaning document {image_id}: {e}")
+        mongo_db.update_failed_status(image_id, str(e))

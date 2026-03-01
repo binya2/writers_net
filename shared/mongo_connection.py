@@ -16,4 +16,15 @@ class MongoDBConnection:
             
         return cls._instance
 
+    def update_failed_status(self, image_id: str, error_message: str):
+        self.state_collection.update_one(
+            {"image_id": image_id},
+            {
+                "$set": {
+                    "status": "failed",
+                    "error": error_message
+                }
+            }
+        )
+
 mongo_db = MongoDBConnection()

@@ -61,13 +61,25 @@ def notify_kafka_ingested(image_id: str):
     )
     kafka_service.producer.flush()
 
-def process_and_dispatch(file_data: bytes, filename: str) -> str:
+def process_and_dispatch(file_data: bytes, filename: str) -> str | None:
     image_id = str(uuid.uuid4())
-    metadata = get_image_metadata(file_data)
-    save_to_gridfs(file_data, filename, image_id, metadata)
-    create_initial_state(image_id, filename, metadata)
-    notify_kafka_ingested(image_id)
-    return image_id
+    try:
+        metadata = get_image_metadata(file_data)
+        create_initial_state(image_id, filename, metadata)
+        
+        try:
+            save_to_gridfs(file_data, filename, image_id, metadata)
+            notify_kafka_ingested(image_id)
+            logger.info(f"Successfully ingested image {image_id}")
+            return image_id
+        except Exception as e:
+            logger.error(f"Failed to complete ingestion for {image_id}: {e}")
+            mongo_db.update_failed_status(image_id, str(e))
+            return image_id
+            
+    except Exception as e:
+        logger.error(f"Failed to start ingestion for {filename}: {e}")
+        return None
 
 def scan_local_folder_task():
     if os.path.exists(settings.INPUT_FOLDER):

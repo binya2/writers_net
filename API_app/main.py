@@ -12,8 +12,8 @@ app = FastAPI(
 
 
 @app.post("/upload/")
-async def upload_image(file: UploadFile = File(...)):
-    file_data = await file.read()
+def upload_image(file: UploadFile = File(...)):
+    file_data = file.file.read()
     image_id = process_and_dispatch(file_data, file.filename)
     return {"message": "Image accepted and in pipeline", "image_id": image_id}
 

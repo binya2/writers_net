@@ -17,10 +17,12 @@ def start_consumer():
             if msg.error():
                 logger.error(f"Kafka error: {msg.error()}")
                 continue
+
             try:
                 process_message(json.loads(msg.value().decode('utf-8')))
+                kafka_service.consumer.commit(msg)
             except Exception as e:
-                logger.error(f"Error processing message: {e}")
+                logger.error(f"Critical error in OCR consumer loop: {e}")
     finally:
         kafka_service.consumer.close()
 
