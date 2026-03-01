@@ -55,7 +55,7 @@ def process_and_dispatch(file_data: bytes, filename: str) -> str | None:
         metadata = get_image_metadata(file_data)
         save_to_gridfs(file_data, filename, image_id, metadata)
         notify_kafka_ingested(image_id, filename, metadata)
-        logger.info(f"Successfully ingested image {image_id}")
+        logger.info(f"Successfully ingested image {image_id} (Source: {filename})")
         return image_id
             
     except Exception as e:
@@ -63,11 +63,23 @@ def process_and_dispatch(file_data: bytes, filename: str) -> str | None:
         return None
 
 def scan_local_folder_task():
-    if os.path.exists(settings.INPUT_FOLDER):
-        for filename in os.listdir(settings.INPUT_FOLDER):
-            file_path = os.path.join(settings.INPUT_FOLDER, filename)
-            if os.path.isfile(file_path):
-                with open(file_path, "rb") as f:
-                    file_data = f.read()
-                process_and_dispatch(file_data, filename)
-                os.remove(file_path)
+    if not os.path.exists(settings.INPUT_FOLDER):
+        logger.warning(f"Scan folder does not exist: {settings.INPUT_FOLDER}")
+        return
+
+    files = [f for f in os.listdir(settings.INPUT_FOLDER) if os.path.isfile(os.path.join(settings.INPUT_FOLDER, f))]
+    logger.info(f"Found {len(files)} files to process in {settings.INPUT_FOLDER}")
+
+    for filename in files:
+        file_path = os.path.join(settings.INPUT_FOLDER, filename)
+        try:
+            with open(file_path, "rb") as f:
+                file_data = f.read()
+            
+            if process_and_dispatch(file_data, filename):
+                try:
+                    os.remove(file_path)
+                except Exception:
+                    pass 
+        except Exception as e:
+            logger.error(f"Error processing file {filename}: {e}")
