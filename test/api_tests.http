@@ -1,4 +1,4 @@
-### Test Image Upload
+### Test Image Upload (Ingestion)
 POST http://localhost:8000/upload/
 Content-Type: multipart/form-data; boundary=boundary
 
@@ -9,7 +9,17 @@ Content-Type: image/jpeg
 < ./test_image.jpg
 --boundary--
 
-### Test Folder Scan
+### Test Folder Scan (Batch Ingestion)
 POST http://localhost:8000/scan-folder/
 Accept: application/json
 
+### ----------------------------------------------------
+
+GET http://localhost:9200/writers_index/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}

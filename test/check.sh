@@ -10,7 +10,7 @@ echo "   Services Health Check"
 echo "================================"
 
 # MongoDB
-echo -n "MongoDB:      "
+echo -n "MongoDB:       "
 if docker exec mongo mongosh --quiet --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q "1"; then
     echo -e "${GREEN}UP${NC}"
 else
@@ -28,6 +28,22 @@ fi
 # Kafka
 echo -n "Kafka:         "
 if docker exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1; then
+    echo -e "${GREEN}UP${NC}"
+else
+    echo -e "${RED}DOWN${NC}"
+fi
+
+# API Service
+echo -n "API Service:   "
+if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs | grep -q "200"; then
+    echo -e "${GREEN}UP${NC}"
+else
+    echo -e "${RED}DOWN${NC}"
+fi
+
+# Dashboard Service (Streamlit Health Check)
+echo -n "Dashboard UI:  "
+if curl -s http://localhost:8501/_stcore/health | grep -q "ok"; then
     echo -e "${GREEN}UP${NC}"
 else
     echo -e "${RED}DOWN${NC}"

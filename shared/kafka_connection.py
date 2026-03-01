@@ -4,6 +4,10 @@ from Shared.config import settings
 class KafkaConnection:
     _instance = None
 
+    def __init__(self):
+        self._producer = None
+        self._consumer = None
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(KafkaConnection, cls).__new__(cls)
