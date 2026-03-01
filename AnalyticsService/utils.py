@@ -3,7 +3,6 @@ import os
 import re
 from collections import Counter
 
-from Shared.mongo_connection import mongo_db
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
 from Shared.config import settings
@@ -46,14 +45,6 @@ def init_analytics(file_path: str = None):
         logger.error(f"Failed to initialize analytics: {file_path} not found!")
 
 
-def fetch_clean_text(image_id: str) -> str | None:
-    document = mongo_db.state_collection.find_one({"image_id": image_id})
-    if not document:
-        logger.error(f"Document {image_id} not found in MongoDB")
-        return None
-    return document.get("results", {}).get("clean_text", "")
-
-
 def get_top_10_words(text: str) -> list:
     if not text:
         return []
@@ -89,22 +80,13 @@ def analyze_sentiment(text: str) -> str:
         return "Neutral"
 
 
-def update_db_analytics(image_id: str, top_words: list, weapons: list, sentiment: str):
-    mongo_db.state_collection.update_one(
-        {"image_id": image_id},
-        {"$set": {
-            "results.analysis.top_10_words": top_words,
-            "results.analysis.weapons_found": weapons,
-            "results.analysis.sentiment": sentiment,
-            "status": "analytics_completed"
-        }}
-    )
-    logger.info(f"MongoDB updated with analytics for: {image_id}")
-
-
-def notify_analytics_complete(image_id: str):
+def notify_analytics_complete(image_id: str, filename: str, metadata: dict, clean_text: str, analytics: dict):
     next_event = {
         "image_id": image_id,
+        "filename": filename,
+        "metadata": metadata,
+        "clean_text": clean_text,
+        "analytics": analytics,
         "status": "analytics_completed"
     }
     kafka_service.producer.poll(0)
@@ -118,6 +100,10 @@ def notify_analytics_complete(image_id: str):
 
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
+    filename = msg_value.get("filename", "unknown")
+    metadata = msg_value.get("metadata", {})
+    clean_text = msg_value.get("clean_text", "")
+
     if not image_id:
         logger.warning("Received message with missing 'image_id' in Analytics. Skipping.")
         return
@@ -125,18 +111,18 @@ def process_message(msg_value: dict):
     logger.info(f"Starting Analytics process for: {image_id}")
 
     try:
-        clean_text = fetch_clean_text(image_id)
-        if clean_text is None:
-            logger.error(f"Text for image {image_id} not found in MongoDB for analytics.")
-            mongo_db.update_failed_status(image_id, "Clean text not found in MongoDB for analytics")
-            return
-
         top_words = get_top_10_words(clean_text)
         weapons = find_weapons(clean_text)
         sentiment = analyze_sentiment(clean_text)
 
-        update_db_analytics(image_id, top_words, weapons, sentiment)
-        notify_analytics_complete(image_id)
+        analytics = {
+            "top_10_words": top_words,
+            "weapons_found": weapons,
+            "sentiment": sentiment
+        }
+
+        notify_analytics_complete(image_id, filename, metadata, clean_text, analytics)
     except Exception as e:
         logger.error(f"Error analyzing document {image_id}: {e}")
-        mongo_db.update_failed_status(image_id, str(e))
+        # Pass empty analytics if it fails
+        notify_analytics_complete(image_id, filename, metadata, clean_text, {})

@@ -22,19 +22,14 @@ def fetch_image_from_gridfs(image_id: str) -> bytes:
     grid_out = mongo_db.fs.find_one({"image_id": image_id})
     return grid_out.read() if grid_out else None
 
-def update_db_after_ocr(image_id: str, raw_text: str):
-    mongo_db.state_collection.update_one(
-        {"image_id": image_id},
-        {
-            "$set": {
-                "results.raw_text": raw_text,
-                "status": "ocr_completed"
-            }
-        }
-    )
-
-def notify_ocr_complete(image_id: str):
-    next_event = {"image_id": image_id, "status": "ocr_completed"}
+def notify_ocr_complete(image_id: str, filename: str, metadata: dict, raw_text: str):
+    next_event = {
+        "image_id": image_id, 
+        "filename": filename,
+        "metadata": metadata,
+        "raw_text": raw_text,
+        "status": "ocr_completed"
+    }
     kafka_service.producer.poll(0)
     kafka_service.producer.produce(
         settings.PRODUCE_TOPIC,
@@ -45,6 +40,9 @@ def notify_ocr_complete(image_id: str):
 
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
+    filename = msg_value.get("filename", "unknown")
+    metadata = msg_value.get("metadata", {})
+    
     if not image_id:
         logger.warning("Received message with missing 'image_id'. Skipping.")
         return
@@ -53,11 +51,8 @@ def process_message(msg_value: dict):
         image_bytes = fetch_image_from_gridfs(image_id)
         if image_bytes:
             raw_text = extract_text_from_memory(image_bytes)
-            update_db_after_ocr(image_id, raw_text)
-            notify_ocr_complete(image_id)
+            notify_ocr_complete(image_id, filename, metadata, raw_text)
         else:
             logger.error(f"Image {image_id} not found in GridFS.")
-            mongo_db.update_failed_status(image_id, "Image not found in GridFS")
     except Exception as e:
         logger.error(f"Error processing message for image {image_id}: {e}")
-        mongo_db.update_failed_status(image_id, str(e))

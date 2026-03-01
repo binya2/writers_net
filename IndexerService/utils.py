@@ -1,4 +1,3 @@
-from Shared.mongo_connection import mongo_db
 from Shared.elastic_connection import elastic_service
 from Shared.logger_config import get_logger
 from Shared.config import settings
@@ -51,30 +50,6 @@ def init_indexer():
         logger.error(f"Failed to initialize indexer: {e}")
 
 
-def fetch_and_clean_document(image_id: str) -> dict | None:
-    document = mongo_db.state_collection.find_one({"image_id": image_id})
-    if not document:
-        return None
-
-    results_data = document.get("results", {})
-    clean_text = results_data.get("clean_text", "")
-    raw_text = results_data.get("raw_text", "")
-
-    final_text = clean_text if clean_text.strip() else raw_text
-
-    indexed_doc = {
-        "image_id": document.get("image_id"),
-        "original_filename": document.get("original_filename"),
-        "status": document.get("status"),
-        "metadata": document.get("metadata", {}),
-        "results": {
-            "analysis": results_data.get("analysis", {}),
-            "clean_text": final_text
-        }
-    }
-    return indexed_doc
-
-
 def index_document(doc: dict):
     image_id = doc.get("image_id", "unknown")
     try:
@@ -86,11 +61,6 @@ def index_document(doc: dict):
             document=doc
         )
         logger.info(f"Document {image_id} indexed to Elasticsearch.")
-
-        mongo_db.state_collection.update_one(
-            {"image_id": image_id},
-            {"$set": {"status": "indexed"}}
-        )
     except Exception as e:
         logger.error(f"Failed to index document {image_id}: {e}")
 
@@ -104,12 +74,17 @@ def process_message(msg_value: dict):
     logger.info(f"Indexing process started for: {image_id}")
 
     try:
-        clean_doc = fetch_and_clean_document(image_id)
-        if clean_doc:
-            index_document(clean_doc)
-        else:
-            logger.error(f"Document {image_id} not found in MongoDB for indexing.")
-            mongo_db.update_failed_status(image_id, "Document not found in MongoDB for indexing")
+        indexed_doc = {
+            "image_id": image_id,
+            "original_filename": msg_value.get("filename", "unknown"),
+            "status": "completed",
+            "metadata": msg_value.get("metadata", {}),
+            "results": {
+                "analysis": msg_value.get("analytics", {}),
+                "clean_text": msg_value.get("clean_text", "")
+            }
+        }
+        
+        index_document(indexed_doc)
     except Exception as e:
-        logger.error(f"Error indexing document {image_id}: {e}")
-        mongo_db.update_failed_status(image_id, str(e))
+        logger.error(f"Error during indexing process for {image_id}: {e}")

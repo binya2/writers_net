@@ -1,44 +1,29 @@
 import re
 import json
-from Shared.mongo_connection import mongo_db
 from Shared.kafka_connection import kafka_service
 from Shared.logger_config import get_logger
 from Shared.config import settings
 
 logger = get_logger("clean-service")
 
-
-def fetch_raw_text(image_id: str) -> str | None:
-    document = mongo_db.state_collection.find_one({"image_id": image_id})
-    if not document:
-        logger.error(f"Document {image_id} not found in MongoDB")
-        return None
-    return document.get("results", {}).get("raw_text", "")
-
-
 def clean_ocr_text(raw_text: str) -> str:
-    if not raw_text:
-        return ""
-    text = raw_text.replace('\n', ' ').replace('\r', ' ')
-    text = re.sub(r'[^a-zA-Z0-9\s.,!?"\'():\-/;%&+=]', ' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
+    try:
+        if not raw_text:
+            return ""
+        text = raw_text.replace('\n', ' ').replace('\r', ' ')
+        text = re.sub(r'[^a-zA-Z0-9\s.,!?"\'():\-/;%&+=]', ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+    except Exception as e:
+        logger.error(f"Text cleaning failed: {e}")
+        return raw_text
 
-
-def update_db_cleaned(image_id: str, clean_text: str):
-    mongo_db.state_collection.update_one(
-        {"image_id": image_id},
-        {"$set": {
-            "results.clean_text": clean_text,
-            "status": "clean_completed"
-        }}
-    )
-    logger.info(f"MongoDB updated with clean text for: {image_id}")
-
-
-def notify_clean_complete(image_id: str):
+def notify_clean_complete(image_id: str, filename: str, metadata: dict, clean_text: str):
     next_event = {
         "image_id": image_id,
+        "filename": filename,
+        "metadata": metadata,
+        "clean_text": clean_text,
         "status": "clean_completed"
     }
     kafka_service.producer.poll(0)
@@ -49,9 +34,12 @@ def notify_clean_complete(image_id: str):
     )
     kafka_service.producer.flush()
 
-
 def process_message(msg_value: dict):
     image_id = msg_value.get("image_id")
+    filename = msg_value.get("filename", "unknown")
+    metadata = msg_value.get("metadata", {})
+    raw_text = msg_value.get("raw_text", "")
+
     if not image_id:
         logger.warning("Received message with missing 'image_id' in CleanService. Skipping.")
         return
@@ -59,15 +47,11 @@ def process_message(msg_value: dict):
     logger.info(f"Starting Clean process for: {image_id}")
 
     try:
-        raw_text = fetch_raw_text(image_id)
-        if raw_text is None:
-            logger.error(f"Raw text for image {image_id} not found in MongoDB for cleaning.")
-            mongo_db.update_failed_status(image_id, "Raw text not found in MongoDB for cleaning")
-            return
-
         cleaned = clean_ocr_text(raw_text)
-        update_db_cleaned(image_id, cleaned)
-        notify_clean_complete(image_id)
+        if not cleaned and raw_text:
+            cleaned = raw_text
+        
+        notify_clean_complete(image_id, filename, metadata, cleaned)
     except Exception as e:
         logger.error(f"Error cleaning document {image_id}: {e}")
-        mongo_db.update_failed_status(image_id, str(e))
+        notify_clean_complete(image_id, filename, metadata, raw_text)
